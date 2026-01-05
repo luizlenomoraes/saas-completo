@@ -1,0 +1,115 @@
+version: '3.8'
+
+services:
+  # =============================================
+  # Aplicação Next.js
+  # =============================================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: checkout-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://checkout:checkout_password@db:5432/checkout_platform?schema=public
+      - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:3000}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT:-465}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
+      - SMTP_FROM_EMAIL=${SMTP_FROM_EMAIL}
+      - SMTP_FROM_NAME=${SMTP_FROM_NAME:-Checkout Platform}
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+      - NEXT_PUBLIC_APP_NAME=${NEXT_PUBLIC_APP_NAME:-Checkout Platform}
+    volumes:
+      - uploads:/app/public/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - checkout-network
+
+  # =============================================
+  # Banco de Dados PostgreSQL
+  # =============================================
+  db:
+    image: postgres:16-alpine
+    container_name: checkout-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=checkout
+      - POSTGRES_PASSWORD=checkout_password
+      - POSTGRES_DB=checkout_platform
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U checkout -d checkout_platform" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - checkout-network
+
+  # =============================================
+  # pgAdmin (Opcional - para gestão visual do banco)
+  # =============================================
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: checkout-pgadmin
+    restart: unless-stopped
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@example.com
+      - PGADMIN_DEFAULT_PASSWORD=admin123
+    ports:
+      - "5050:80"
+    depends_on:
+      - db
+    networks:
+      - checkout-network
+    profiles:
+      - debug
+
+  # =============================================
+  # Redis (Opcional - para cache e rate limiting)
+  # =============================================
+  redis:
+    image: redis:7-alpine
+    container_name: checkout-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - checkout-network
+    profiles:
+      - cache
+
+# =============================================
+# Volumes
+# =============================================
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  uploads:
+    driver: local
+
+# =============================================
+# Networks
+# =============================================
+networks:
+  checkout-network:
+    driver: bridge

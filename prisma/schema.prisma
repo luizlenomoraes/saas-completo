@@ -1,0 +1,521 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model aluno_progresso {
+  id             String   @id
+  aluno_email    String
+  aula_id        String
+  data_conclusao DateTime @default(now())
+  aulas          aulas    @relation(fields: [aula_id], references: [id], onDelete: Cascade)
+
+  @@unique([aluno_email, aula_id])
+}
+
+model alunos_acessos {
+  id          String   @id
+  email_aluno String
+  produto_id  String
+  senha       String?
+  venda_id    String?
+  data_acesso DateTime @default(now())
+  produtos    produtos @relation(fields: [produto_id], references: [id], onDelete: Cascade)
+
+  @@unique([email_aluno, produto_id])
+}
+
+model aula_arquivos {
+  id              String   @id
+  aula_id         String
+  nome_original   String
+  nome_salvo      String
+  caminho_arquivo String
+  tipo_mime       String?
+  tamanho_bytes   Int?
+  ordem           Int      @default(0)
+  data_upload     DateTime @default(now())
+  aulas           aulas    @relation(fields: [aula_id], references: [id], onDelete: Cascade)
+}
+
+model aulas {
+  id              String              @id
+  modulo_id       String
+  titulo          String
+  url_video       String?
+  descricao       String?
+  ordem           Int                 @default(0)
+  release_days    Int                 @default(0)
+  tipo_conteudo   lesson_content_type @default(video)
+  aluno_progresso aluno_progresso[]
+  aula_arquivos   aula_arquivos[]
+  modulos         modulos             @relation(fields: [modulo_id], references: [id], onDelete: Cascade)
+}
+
+model cloned_site_settings {
+  id                  String       @id
+  cloned_site_id      String       @unique
+  facebook_pixel_id   String?
+  google_analytics_id String?
+  custom_head_scripts String?
+  created_at          DateTime     @default(now())
+  updated_at          DateTime
+  cloned_sites        cloned_sites @relation(fields: [cloned_site_id], references: [id], onDelete: Cascade)
+}
+
+model cloned_sites {
+  id                   String                @id
+  usuario_id           String
+  original_url         String                @db.VarChar(2048)
+  title                String?
+  original_html        String
+  edited_html          String?
+  slug                 String?
+  status               String                @default("draft")
+  created_at           DateTime              @default(now())
+  updated_at           DateTime
+  cloned_site_settings cloned_site_settings?
+  usuarios             usuarios              @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+}
+
+model configuracoes {
+  chave String @id
+  valor String
+}
+
+model configuracoes_sistema {
+  id         String   @id
+  chave      String   @unique
+  valor      String?
+  tipo       String   @default("text")
+  descricao  String?
+  created_at DateTime @default(now())
+  updated_at DateTime
+}
+
+model cursos {
+  id           String    @id
+  produto_id   String    @unique
+  titulo       String
+  descricao    String?
+  imagem_url   String?
+  banner_url   String?
+  data_criacao DateTime  @default(now())
+  produtos     produtos  @relation(fields: [produto_id], references: [id], onDelete: Cascade)
+  modulos      modulos[]
+}
+
+model email_queue {
+  id              String       @id
+  recipient_email String
+  recipient_name  String?
+  subject         String       @db.VarChar(500)
+  body            String
+  status          email_status @default(pending)
+  attempts        Int          @default(0)
+  error_message   String?
+  sent_at         DateTime?
+  created_at      DateTime     @default(now())
+}
+
+model login_attempts {
+  id            String    @id
+  ip_address    String
+  email         String?
+  attempts      Int       @default(1)
+  last_attempt  DateTime  @default(now())
+  blocked_until DateTime?
+}
+
+model modulos {
+  id              String  @id
+  curso_id        String
+  titulo          String
+  imagem_capa_url String?
+  ordem           Int     @default(0)
+  release_days    Int     @default(0)
+  aulas           aulas[]
+  cursos          cursos  @relation(fields: [curso_id], references: [id], onDelete: Cascade)
+}
+
+model notificacoes {
+  id               String   @id
+  usuario_id       String
+  tipo             String
+  mensagem         String
+  valor            Decimal? @db.Decimal(10, 2)
+  lida             Boolean  @default(false)
+  displayed_live   Boolean  @default(false)
+  link_acao        String?
+  metodo_pagamento String?
+  venda_id_fk      String?
+  data_notificacao DateTime @default(now())
+  usuarios         usuarios @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+  vendas           vendas?  @relation(fields: [venda_id_fk], references: [id])
+}
+
+model order_bumps {
+  id                                              String   @id
+  main_product_id                                 String
+  offer_product_id                                String
+  headline                                        String   @default("Sim, eu quero aproveitar essa oferta!")
+  description                                     String?
+  ordem                                           Int      @default(0)
+  is_active                                       Boolean  @default(true)
+  produtos_order_bumps_main_product_idToprodutos  produtos @relation("order_bumps_main_product_idToprodutos", fields: [main_product_id], references: [id], onDelete: Cascade)
+  produtos_order_bumps_offer_product_idToprodutos produtos @relation("order_bumps_offer_product_idToprodutos", fields: [offer_product_id], references: [id], onDelete: Cascade)
+}
+
+model plugins {
+  id            String   @id
+  nome          String
+  pasta         String
+  versao        String   @default("1.0.0")
+  ativo         Boolean  @default(false)
+  instalado_em  DateTime @default(now())
+  atualizado_em DateTime
+}
+
+model product_exclusive_offers {
+  id                                                            String   @id
+  source_product_id                                             String
+  offer_product_id                                              String
+  is_active                                                     Boolean  @default(true)
+  created_at                                                    DateTime @default(now())
+  produtos_product_exclusive_offers_offer_product_idToprodutos  produtos @relation("product_exclusive_offers_offer_product_idToprodutos", fields: [offer_product_id], references: [id], onDelete: Cascade)
+  produtos_product_exclusive_offers_source_product_idToprodutos produtos @relation("product_exclusive_offers_source_product_idToprodutos", fields: [source_product_id], references: [id], onDelete: Cascade)
+}
+
+model produtos {
+  id                                                                            String                     @id
+  nome                                                                          String
+  descricao                                                                     String?
+  preco                                                                         Decimal                    @db.Decimal(10, 2)
+  preco_anterior                                                                Decimal?                   @db.Decimal(10, 2)
+  foto                                                                          String?
+  checkout_hash                                                                 String                     @unique
+  checkout_config                                                               Json?
+  tipo_entrega                                                                  delivery_type              @default(link)
+  conteudo_entrega                                                              String?
+  gateway                                                                       String                     @default("mercadopago")
+  usuario_id                                                                    String
+  data_criacao                                                                  DateTime                   @default(now())
+  alunos_acessos                                                                alunos_acessos[]
+  cursos                                                                        cursos?
+  order_bumps_order_bumps_main_product_idToprodutos                             order_bumps[]              @relation("order_bumps_main_product_idToprodutos")
+  order_bumps_order_bumps_offer_product_idToprodutos                            order_bumps[]              @relation("order_bumps_offer_product_idToprodutos")
+  product_exclusive_offers_product_exclusive_offers_offer_product_idToprodutos  product_exclusive_offers[] @relation("product_exclusive_offers_offer_product_idToprodutos")
+  product_exclusive_offers_product_exclusive_offers_source_product_idToprodutos product_exclusive_offers[] @relation("product_exclusive_offers_source_product_idToprodutos")
+  usuarios                                                                      usuarios                   @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+  starfy_tracking_products                                                      starfy_tracking_products?
+  utmfy_integrations                                                            utmfy_integrations[]
+  vendas                                                                        vendas[]
+  webhooks                                                                      webhooks[]
+}
+
+model pwa_config {
+  id                String   @id
+  app_name          String   @default("Plataforma")
+  short_name        String   @default("App")
+  description       String?
+  icon_path         String?
+  theme_color       String   @default("#32e768")
+  background_color  String   @default("#ffffff")
+  display_mode      String   @default("standalone")
+  start_url         String   @default("/")
+  scope             String   @default("/")
+  push_enabled      Boolean  @default(false)
+  vapid_public_key  String?
+  vapid_private_key String?
+  created_at        DateTime @default(now())
+  updated_at        DateTime
+}
+
+model pwa_push_notifications {
+  id           String   @id
+  title        String
+  message      String
+  url          String?  @db.VarChar(500)
+  icon         String?  @db.VarChar(500)
+  sent_count   Int      @default(0)
+  failed_count Int      @default(0)
+  created_by   String?
+  created_at   DateTime @default(now())
+}
+
+model pwa_push_subscriptions {
+  id         String   @id
+  usuario_id String
+  endpoint   String
+  p256dh     String
+  auth       String
+  user_agent String?  @db.VarChar(500)
+  created_at DateTime @default(now())
+  updated_at DateTime
+  usuarios   usuarios @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+}
+
+model saas_admin_gateways {
+  id                   String   @id
+  gateway              String   @unique
+  mp_access_token      String?
+  mp_public_key        String?
+  efi_client_id        String?
+  efi_client_secret    String?
+  efi_certificate_path String?
+  efi_pix_key          String?
+  efi_payee_code       String?
+  pushinpay_token      String?
+  beehive_secret_key   String?
+  beehive_public_key   String?
+  hypercash_secret_key String?
+  hypercash_public_key String?
+  updated_at           DateTime
+}
+
+model saas_assinaturas {
+  id                    String                   @id
+  usuario_id            String
+  plano_id              String
+  status                saas_subscription_status @default(pendente)
+  data_inicio           DateTime                 @db.Date
+  data_vencimento       DateTime                 @db.Date
+  transacao_id          String?
+  metodo_pagamento      String?
+  gateway               String?
+  renovacao_automatica  Boolean                  @default(true)
+  notificado_vencimento Boolean                  @default(false)
+  notificado_expirado   Boolean                  @default(false)
+  criado_em             DateTime                 @default(now())
+  atualizado_em         DateTime
+  saas_planos           saas_planos              @relation(fields: [plano_id], references: [id], onDelete: Cascade)
+  usuarios              usuarios                 @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+}
+
+model saas_config {
+  id         String   @id
+  enabled    Boolean  @default(false)
+  updated_at DateTime
+}
+
+model saas_config_admin {
+  id              String   @id
+  mp_access_token String?
+  mp_public_key   String?
+  pushinpay_token String?
+  ativo           Boolean  @default(true)
+  payment_methods Json?
+  atualizado_em   DateTime
+}
+
+model saas_limites_uso {
+  id                 String   @id
+  usuario_id         String
+  mes_ano            String
+  produtos_criados   Int      @default(0)
+  pedidos_realizados Int      @default(0)
+  resetado_em        DateTime @default(now())
+  usuarios           usuarios @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+
+  @@unique([usuario_id, mes_ano])
+}
+
+model saas_planos {
+  id               String             @id
+  nome             String
+  descricao        String?
+  preco            Decimal            @default(0) @db.Decimal(10, 2)
+  periodo          saas_period        @default(mensal)
+  max_produtos     Int?
+  max_pedidos_mes  Int?
+  is_free          Boolean            @default(false)
+  tracking_enabled Boolean            @default(false)
+  ativo            Boolean            @default(true)
+  ordem            Int                @default(0)
+  criado_em        DateTime           @default(now())
+  atualizado_em    DateTime
+  saas_assinaturas saas_assinaturas[]
+}
+
+model starfy_tracking_events {
+  id                       String                   @id
+  tracking_product_id      String
+  session_id               String
+  event_type               String
+  event_data               Json?
+  created_at               DateTime                 @default(now())
+  starfy_tracking_products starfy_tracking_products @relation(fields: [tracking_product_id], references: [id], onDelete: Cascade)
+}
+
+model starfy_tracking_products {
+  id                     String                   @id
+  usuario_id             String
+  produto_id             String                   @unique
+  tracking_id            String                   @unique
+  created_at             DateTime                 @default(now())
+  updated_at             DateTime
+  starfy_tracking_events starfy_tracking_events[]
+  produtos               produtos                 @relation(fields: [produto_id], references: [id], onDelete: Cascade)
+  usuarios               usuarios                 @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+}
+
+model usuarios {
+  id                               String                     @id
+  usuario                          String                     @unique
+  nome                             String?
+  telefone                         String?
+  senha                            String
+  tipo                             user_type                  @default(infoprodutor)
+  foto_perfil                      String?
+  mp_public_key                    String?
+  mp_access_token                  String?
+  pushinpay_token                  String?
+  efi_client_id                    String?
+  efi_client_secret                String?
+  efi_certificate_path             String?
+  efi_pix_key                      String?
+  efi_payee_code                   String?
+  beehive_secret_key               String?
+  beehive_public_key               String?
+  hypercash_secret_key             String?
+  hypercash_public_key             String?
+  remember_token                   String?
+  password_reset_token             String?
+  password_reset_expires           DateTime?
+  password_setup_token             String?
+  password_setup_expires           DateTime?
+  ultima_visualizacao_notificacoes DateTime?
+  saas_plano_free_atribuido        Boolean                    @default(false)
+  createdAt                        DateTime                   @default(now())
+  updatedAt                        DateTime
+  cloned_sites                     cloned_sites[]
+  notificacoes                     notificacoes[]
+  produtos                         produtos[]
+  pwa_push_subscriptions           pwa_push_subscriptions[]
+  saas_assinaturas                 saas_assinaturas[]
+  saas_limites_uso                 saas_limites_uso[]
+  starfy_tracking_products         starfy_tracking_products[]
+  utmfy_integrations               utmfy_integrations[]
+  webhooks                         webhooks[]
+}
+
+model utmfy_integrations {
+  id                      String    @id
+  usuario_id              String
+  name                    String
+  api_token               String
+  product_id              String?
+  event_approved          Boolean   @default(false)
+  event_pending           Boolean   @default(false)
+  event_rejected          Boolean   @default(false)
+  event_refunded          Boolean   @default(false)
+  event_charged_back      Boolean   @default(false)
+  event_initiate_checkout Boolean   @default(false)
+  created_at              DateTime  @default(now())
+  updated_at              DateTime
+  produtos                produtos? @relation(fields: [product_id], references: [id])
+  usuarios                usuarios  @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+}
+
+model vendas {
+  id                     String         @id
+  produto_id             String
+  valor                  Decimal        @db.Decimal(10, 2)
+  status_pagamento       sale_status
+  metodo_pagamento       String?
+  transacao_id           String?
+  checkout_session_uuid  String?
+  comprador_email        String
+  comprador_nome         String?
+  comprador_cpf          String?
+  comprador_telefone     String?
+  comprador_cep          String?
+  comprador_logradouro   String?
+  comprador_numero       String?
+  comprador_complemento  String?
+  comprador_bairro       String?
+  comprador_cidade       String?
+  comprador_estado       String?
+  utm_source             String?
+  utm_campaign           String?
+  utm_medium             String?
+  utm_content            String?
+  utm_term               String?
+  src                    String?
+  sck                    String?
+  email_entrega_enviado  Boolean        @default(false)
+  email_recovery_sent    Boolean        @default(false)
+  email_reenviado_manual Boolean        @default(false)
+  data_venda             DateTime       @default(now())
+  notificacoes           notificacoes[]
+  produtos               produtos       @relation(fields: [produto_id], references: [id], onDelete: Cascade)
+}
+
+model webhooks {
+  id                 String    @id
+  usuario_id         String
+  produto_id         String?
+  url                String    @db.VarChar(2048)
+  event_approved     Boolean   @default(false)
+  event_pending      Boolean   @default(false)
+  event_rejected     Boolean   @default(false)
+  event_refunded     Boolean   @default(false)
+  event_charged_back Boolean   @default(false)
+  created_at         DateTime  @default(now())
+  updated_at         DateTime
+  produtos           produtos? @relation(fields: [produto_id], references: [id])
+  usuarios           usuarios  @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+}
+
+enum delivery_type {
+  link
+  email_pdf
+  area_membros
+  produto_fisico
+}
+
+enum email_status {
+  pending
+  processing
+  sent
+  failed
+}
+
+enum lesson_content_type {
+  video
+  files
+  mixed
+}
+
+enum saas_period {
+  mensal
+  anual
+}
+
+enum saas_subscription_status {
+  ativo
+  expirado
+  cancelado
+  pendente
+}
+
+enum sale_status {
+  pending
+  approved
+  rejected
+  refunded
+  charged_back
+  cancelled
+  info_filled
+  pix_created
+}
+
+enum user_type {
+  admin
+  infoprodutor
+  usuario
+}

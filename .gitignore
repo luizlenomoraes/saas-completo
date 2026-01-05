@@ -1,0 +1,68 @@
+# Dependências
+node_modules
+.pnp
+.pnp.js
+
+# Testes
+coverage
+
+# Next.js
+.next/
+out/
+
+# Produção
+build
+dist
+
+# Misc
+.DS_Store
+*.pem
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Local env files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# PWA
+public/sw.js
+public/workbox-*.js
+public/sw.js.map
+public/workbox-*.js.map
+
+# Logs
+*.log
+logs/
+
+# Uploads (em produção, usar storage externo)
+# public/uploads/*
+# !public/uploads/.gitkeep
+
+# Prisma
+prisma/*.db
+prisma/*.db-journal
+
+# Certificados (nunca commitar!)
+*.pem
+*.p12
+*.pfx
+certificates/

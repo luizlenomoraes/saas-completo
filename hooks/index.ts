@@ -1,0 +1,1 @@
+export { useMercadoPago } from './useMercadoPago'
