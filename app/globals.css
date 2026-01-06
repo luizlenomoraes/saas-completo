@@ -93,7 +93,11 @@
   }
 
   .glass-card {
-    @apply glass rounded-xl transition-all duration-300 hover:border-[#D4AF37]/40 hover:shadow-[0_0_20px_rgba(212, 175, 55, 0.1)];
+    @apply glass rounded-xl transition-all duration-300 hover:border-[#D4AF37]/40;
+  }
+
+  .glass-card:hover {
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.1);
   }
 
   .text-gradient-gold {
@@ -101,7 +105,8 @@
   }
 
   .border-gold-glow {
-    @apply border border-[#D4AF37]/30 shadow-[0_0_10px_rgba(212, 175, 55, 0.1)];
+    @apply border border-[#D4AF37]/30;
+    box-shadow: 0 0 10px rgba(212, 175, 55, 0.1);
   }
 }
 

@@ -4,7 +4,7 @@ import Script from 'next/script'
 export async function TrackingScripts({ userId }: { userId: string }) {
     if (!userId) return null
 
-    const tracking = await prisma.tracking_pixels.findUnique({
+    const tracking = await (prisma as any).tracking_pixels.findUnique({
         where: { usuario_id: userId }
     })
 
