@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Loader2, Bot, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 
-export default function LoginPage() {
+function LoginContent() {
     const router = useRouter()
     const searchParams = useSearchParams()
     const { data: session, status } = useSession()
@@ -35,7 +35,7 @@ export default function LoginPage() {
         }
     }, [status, session, callbackUrl])
 
-    function redirectByUserType(userType: string) {
+    function _redirectByUserType(userType: string) {
         if (callbackUrl) {
             router.push(callbackUrl)
             return
@@ -185,5 +185,17 @@ export default function LoginPage() {
                 </form>
             </Card>
         </div>
+    )
+}
+
+export default function LoginPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex min-h-screen items-center justify-center p-4">
+                <Loader2 className="w-10 h-10 animate-spin text-[#D4AF37]" />
+            </div>
+        }>
+            <LoginContent />
+        </Suspense>
     )
 }

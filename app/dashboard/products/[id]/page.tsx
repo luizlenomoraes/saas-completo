@@ -11,8 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Separator } from '@/components/ui/separator'
 import {
-    ArrowLeft, Loader2, Package, Save, ExternalLink, Copy, Trash2,
-    Plus, GripVertical, Video, FileText, ChevronDown, ChevronRight,
+    ArrowLeft, Loader2, Save, ExternalLink, Copy, Trash2,
+    Plus, GripVertical, Video,
     BookOpen, Pencil, Clock, Tag
 } from 'lucide-react'
 import Link from 'next/link'

@@ -1,14 +1,20 @@
 import { MetadataRoute } from 'next'
-import { prisma } from '@/lib/db'
+
+export const dynamic = 'force-dynamic'
 
 export default async function manifest(): Promise<MetadataRoute.Manifest> {
     let config = null
 
-    try {
-        // Buscar primeira configuração ou default
-        config = await prisma.pwa_config.findFirst()
-    } catch (error) {
-        console.warn('Failed to fetch PWA config for manifest generation', error)
+    // Só tenta acessar o banco se DATABASE_URL estiver definido (não durante build)
+    if (process.env.DATABASE_URL) {
+        try {
+            // Import dinâmico para evitar erro durante build
+            const { prisma } = await import('@/lib/db')
+            // Buscar primeira configuração ou default
+            config = await prisma.pwa_config.findFirst()
+        } catch (error) {
+            console.warn('Failed to fetch PWA config for manifest generation', error)
+        }
     }
 
     const name = config?.app_name || 'AgentiVerso SaaS'

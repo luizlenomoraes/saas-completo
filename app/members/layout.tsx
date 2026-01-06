@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { LogOut, GraduationCap, Menu, X, Bot } from 'lucide-react'
+import { LogOut, Menu, X, Bot } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 

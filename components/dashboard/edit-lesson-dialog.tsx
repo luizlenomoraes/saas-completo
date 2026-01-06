@@ -15,7 +15,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Loader2, Video, FileText, Clock, Paperclip, Trash2, UploadCloud, File as FileIcon } from 'lucide-react'
+import { Loader2, Video, FileText, Clock, Trash2, UploadCloud, File as FileIcon } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface Aula {

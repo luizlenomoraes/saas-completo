@@ -72,7 +72,7 @@ function generateInstallmentOptions(amount: number, maxInstallments: number = 12
     return options
 }
 
-export function CreditCardForm({ data, onChange, amount, publicKey, disabled = false }: CreditCardFormProps) {
+export function CreditCardForm({ data, onChange, amount, publicKey: _publicKey, disabled = false }: CreditCardFormProps) {
     const [touched, setTouched] = useState<Record<string, boolean>>({})
     const [cardBrand, setCardBrand] = useState('unknown')
     const [installmentOptions, setInstallmentOptions] = useState<{ value: number; label: string }[]>([])

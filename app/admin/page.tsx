@@ -3,9 +3,8 @@ import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Users, Package, DollarSign, TrendingUp, ShoppingCart, Settings } from 'lucide-react'
+import { Users, Package, DollarSign, ShoppingCart, Settings } from 'lucide-react'
 import Link from 'next/link'
-import { Button } from '@/components/ui/button'
 
 export default async function AdminDashboard() {
     const session = await getServerSession(authOptions)

@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { toast } from 'sonner'
+// toast removido - não utilizado neste componente
 import { Loader2, Mail, ArrowLeft, CheckCircle } from 'lucide-react'
 
 import { forgotPasswordSchema, type ForgotPasswordInput } from '@/lib/validations'
@@ -33,7 +33,7 @@ export default function ForgotPasswordPage() {
         setIsLoading(true)
 
         try {
-            const response = await fetch('/api/auth/forgot-password', {
+            const _response = await fetch('/api/auth/forgot-password', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data),
@@ -41,7 +41,7 @@ export default function ForgotPasswordPage() {
 
             // Sempre mostra sucesso por segurança (não revelar se email existe)
             setIsSuccess(true)
-        } catch (error) {
+        } catch (_error) {
             // Mesmo em erro, mostrar sucesso por segurança
             setIsSuccess(true)
         } finally {

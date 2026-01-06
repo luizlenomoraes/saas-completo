@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -9,9 +9,9 @@ import { Label } from '@/components/ui/label'
 import { Loader2, Lock, CheckCircle, XCircle } from 'lucide-react'
 import Link from 'next/link'
 
-export default function SetupPasswordPage() {
+function SetupPasswordContent() {
     const searchParams = useSearchParams()
-    const router = useRouter()
+    const _router = useRouter()
     const token = searchParams.get('token')
 
     const [isLoading, setIsLoading] = useState(true)
@@ -229,5 +229,22 @@ export default function SetupPasswordPage() {
                 </form>
             </Card>
         </div>
+    )
+}
+
+export default function SetupPasswordPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-900 px-4">
+                <Card className="w-full max-w-md">
+                    <CardContent className="py-12 text-center">
+                        <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+                        <p className="mt-4 text-muted-foreground">Carregando...</p>
+                    </CardContent>
+                </Card>
+            </div>
+        }>
+            <SetupPasswordContent />
+        </Suspense>
     )
 }

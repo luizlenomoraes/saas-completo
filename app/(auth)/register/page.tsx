@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -119,7 +119,7 @@ export default function RegisterPage() {
                 // Se login automático falhar, redirecionar para login
                 router.push('/login')
             }
-        } catch (error) {
+        } catch (_error) {
             toast.error('Erro ao criar conta', {
                 description: 'Ocorreu um erro inesperado. Tente novamente.',
             })
@@ -255,8 +255,8 @@ export default function RegisterPage() {
                         <div className="flex items-center gap-2 text-xs">
                             <CheckCircle2
                                 className={`h-3.5 w-3.5 ${passwordRequirements.minLength
-                                        ? 'text-green-500'
-                                        : 'text-gray-300'
+                                    ? 'text-green-500'
+                                    : 'text-gray-300'
                                     }`}
                             />
                             <span className={passwordRequirements.minLength ? 'text-green-600' : 'text-gray-400'}>

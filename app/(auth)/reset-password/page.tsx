@@ -15,7 +15,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 
 export default function ResetPasswordPage() {
-    const router = useRouter()
+    const _router = useRouter()
     const searchParams = useSearchParams()
     const token = searchParams.get('token')
 
@@ -56,7 +56,7 @@ export default function ResetPasswordPage() {
                 const response = await fetch(`/api/auth/validate-reset-token?token=${token}`)
                 const result = await response.json()
                 setIsValidToken(result.valid)
-            } catch (error) {
+            } catch (_error) {
                 setIsValidToken(false)
             } finally {
                 setIsValidating(false)
@@ -87,7 +87,7 @@ export default function ResetPasswordPage() {
 
             setIsSuccess(true)
             toast.success('Senha redefinida com sucesso!')
-        } catch (error) {
+        } catch (_error) {
             toast.error('Erro ao redefinir senha', {
                 description: 'Ocorreu um erro inesperado. Tente novamente.',
             })

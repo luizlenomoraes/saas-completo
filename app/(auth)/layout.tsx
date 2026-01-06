@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import Image from 'next/image'
+// Image removido - não utilizado neste componente
 
 interface AuthLayoutProps {
     children: React.ReactNode

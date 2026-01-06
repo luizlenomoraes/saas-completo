@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { PlayCircle, BookOpen, GraduationCap, Clock } from 'lucide-react'
+import { PlayCircle, BookOpen, GraduationCap } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 
 export const dynamic = 'force-dynamic'

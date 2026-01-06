@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
-import { Plus, Edit, Trash, Cloud, CreditCard, List, Check } from 'lucide-react'
+import { Plus, Edit, Trash, CreditCard, List, Check } from 'lucide-react'
 import { PlanForm } from './plan-form'
 import { GatewaysForm } from './gateways-form'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
@@ -23,7 +23,7 @@ interface SaasPlan {
     nome: string
     descricao: string
     preco: number
-    periodo: string
+    periodo: 'mensal' | 'anual'
     max_produtos: number | null
     max_pedidos_mes: number | null
     is_free: boolean

@@ -24,7 +24,7 @@ export function PixModal({
     onClose,
     orderId,
     amount,
-    qrCode,
+    qrCode: _qrCode,
     qrCodeBase64,
     copyPaste,
     expiresAt,

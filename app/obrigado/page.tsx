@@ -86,7 +86,7 @@ function ThankYouContent() {
         )
     }
 
-    const isPending = orderData.status === 'PENDING'
+    const _isPending = orderData.status === 'PENDING'
     const isApproved = orderData.status === 'APPROVED'
 
     return (
@@ -95,8 +95,8 @@ function ThankYouContent() {
                 {/* Header com confetti background */}
                 <div className="text-center mb-8">
                     <div className={`w-24 h-24 mx-auto rounded-full flex items-center justify-center mb-6 ${isApproved
-                            ? 'bg-green-100 dark:bg-green-900/30'
-                            : 'bg-yellow-100 dark:bg-yellow-900/30'
+                        ? 'bg-green-100 dark:bg-green-900/30'
+                        : 'bg-yellow-100 dark:bg-yellow-900/30'
                         }`}>
                         {isApproved ? (
                             <CheckCircle className="w-14 h-14 text-green-500" />
@@ -106,8 +106,8 @@ function ThankYouContent() {
                     </div>
 
                     <h1 className={`text-3xl font-bold mb-2 ${isApproved
-                            ? 'text-green-600 dark:text-green-400'
-                            : 'text-yellow-600 dark:text-yellow-400'
+                        ? 'text-green-600 dark:text-green-400'
+                        : 'text-yellow-600 dark:text-yellow-400'
                         }`}>
                         {isApproved ? 'Compra Confirmada!' : 'Aguardando Pagamento'}
                     </h1>
@@ -148,8 +148,8 @@ function ThankYouContent() {
                             <div className="flex justify-between items-center">
                                 <span className="text-gray-500">Status</span>
                                 <span className={`px-3 py-1 rounded-full text-sm font-medium ${isApproved
-                                        ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                                        : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                                    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                                    : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
                                     }`}>
                                     {isApproved ? 'Aprovado' : 'Pendente'}
                                 </span>

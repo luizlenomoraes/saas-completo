@@ -28,7 +28,7 @@ interface Modulo {
     titulo: string
     ordem: number
     release_days: number
-    aulas?: Aula[]
+    aulas: Aula[]
 }
 
 interface EditModuleDialogProps {

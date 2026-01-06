@@ -2,6 +2,9 @@ import { prisma } from '@/lib/db'
 import { PricingCards } from '@/components/pricing/pricing-cards'
 import { Metadata } from 'next'
 
+// Forçar renderização dinâmica - evita pré-renderização durante build
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
     title: 'Planos e Preços',
     description: 'Escolha o plano ideal para escalar seu negócio de infoprodutos.'
