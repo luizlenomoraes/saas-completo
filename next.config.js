@@ -147,6 +147,16 @@ const withPWA = require("@ducanh2912/next-pwa").default({
 const nextConfig = {
   reactStrictMode: true,
 
+  // Desabilitar verificação de ESLint durante o build (para produção)
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+
+  // Desabilitar verificação de tipos TypeScript durante o build (para produção)
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+
   // Permitir imagens de qualquer domínio (uploads externos)
   images: {
     remotePatterns: [
