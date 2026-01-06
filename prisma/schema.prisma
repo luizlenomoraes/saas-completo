@@ -399,6 +399,7 @@ model usuarios {
   saas_assinaturas                 saas_assinaturas[]
   saas_limites_uso                 saas_limites_uso[]
   starfy_tracking_products         starfy_tracking_products[]
+  tracking_pixels                  tracking_pixels?
   utmfy_integrations               utmfy_integrations[]
   webhooks                         webhooks[]
 }
@@ -453,6 +454,21 @@ model vendas {
   data_venda             DateTime       @default(now())
   notificacoes           notificacoes[]
   produtos               produtos       @relation(fields: [produto_id], references: [id], onDelete: Cascade)
+}
+
+model tracking_pixels {
+  id                  String   @id
+  usuario_id          String   @unique
+  facebook_pixel_id   String?
+  google_analytics_id String?
+  tiktok_pixel_id     String?
+  kwai_pixel_id       String?
+  pinterest_pixel_id  String?
+  taboola_pixel_id    String?
+  linkedin_pixel_id   String?
+  created_at          DateTime @default(now())
+  updated_at          DateTime
+  usuarios            usuarios @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
 }
 
 model webhooks {

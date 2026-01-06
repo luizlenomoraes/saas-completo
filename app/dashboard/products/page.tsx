@@ -90,10 +90,14 @@ export default async function ProductsPage() {
                                             src={produto.foto}
                                             alt={produto.nome}
                                             className="w-full h-full object-cover"
+                                            onError={(e) => {
+                                                // Se a imagem falhar, esconder e mostrar o ícone
+                                                (e.target as HTMLImageElement).style.display = 'none';
+                                                (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                                            }}
                                         />
-                                    ) : (
-                                        <Package className="w-12 h-12 text-primary/30" />
-                                    )}
+                                    ) : null}
+                                    <Package className={`w-12 h-12 text-primary/30 absolute ${produto.foto ? 'hidden' : ''}`} />
                                     {/* Overlay de edição no hover */}
                                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                         <div className="text-white flex items-center gap-2">

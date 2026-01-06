@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db'
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import { CourseSidebar } from '@/components/members/course-sidebar'
+import { CourseHeader } from '@/components/members/course-header'
 
 export default async function CourseLayout({
     children,
@@ -57,13 +58,19 @@ export default async function CourseLayout({
     }
 
     return (
-        <div className="min-h-screen">
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+            {/* Header */}
+            <CourseHeader cursoTitulo={curso.titulo} />
+
+            {/* Sidebar */}
             <CourseSidebar
                 curso={curso}
                 produtoId={produtoId}
                 diasDesdeAcesso={diasDesdeAcesso}
             />
-            <main className="md:pl-80 h-full transition-all">
+
+            {/* Main content com padding para header e sidebar */}
+            <main className="md:pl-[20rem] pt-20 px-6 pb-6 h-full transition-all">
                 {children}
             </main>
         </div>

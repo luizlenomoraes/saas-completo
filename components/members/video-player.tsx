@@ -15,16 +15,36 @@ import {
 import { cn } from '@/lib/utils'
 import dynamic from 'next/dynamic'
 
+// Dynamic import do ReactPlayer com loading fallback
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const ReactPlayer: any = dynamic(
     () => import('react-player').then((mod) => mod.default),
-    { ssr: false }
+    {
+        ssr: false,
+        loading: () => (
+            <div className="aspect-video bg-zinc-900 animate-pulse rounded-lg flex items-center justify-center">
+                <div className="w-16 h-16 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+            </div>
+        )
+    }
 )
 
 interface VideoPlayerProps {
     url: string
     title: string
     onEnded?: () => void
+}
+
+// Função para extrair o ID do vídeo do YouTube (mesmo regex do PHP original)
+function extractYouTubeId(url: string): string | null {
+    if (!url) return null
+    const match = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/|v\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/i)
+    return match?.[1] || null
+}
+
+// Função para verificar se é um vídeo do YouTube
+function isYouTubeUrl(url: string): boolean {
+    return /(?:youtube\.com|youtu\.be)/i.test(url)
 }
 
 export function VideoPlayer({ url, title, onEnded }: VideoPlayerProps) {
@@ -40,6 +60,7 @@ export function VideoPlayer({ url, title, onEnded }: VideoPlayerProps) {
     const [isFullscreen, setIsFullscreen] = useState(false)
     const [isReady, setIsReady] = useState(false)
     const [hasError, setHasError] = useState(false)
+    const [useFallback, setUseFallback] = useState(false) // Fallback para iframe nativo
 
     // Referências
     const playerRef = useRef<any>(null)
@@ -48,7 +69,23 @@ export function VideoPlayer({ url, title, onEnded }: VideoPlayerProps) {
 
     useEffect(() => {
         setIsClient(true)
-    }, [])
+        // Log da URL para debug
+        console.log('[VideoPlayer] URL recebida:', url)
+    }, [url])
+
+    // Timeout para detectar se o player nunca carrega
+    useEffect(() => {
+        if (!isClient || !url || hasError) return
+
+        const timeout = setTimeout(() => {
+            if (!isReady) {
+                console.warn('[VideoPlayer] Timeout: Player não ficou pronto em 15 segundos. URL:', url)
+                // Não definimos como erro para dar mais tempo, mas logamos o aviso
+            }
+        }, 15000)
+
+        return () => clearTimeout(timeout)
+    }, [isClient, url, isReady, hasError])
 
     const handleMouseMove = useCallback(() => {
         setShowControls(true)
@@ -142,8 +179,44 @@ export function VideoPlayer({ url, title, onEnded }: VideoPlayerProps) {
         )
     }
 
-    // Se houve erro
-    if (hasError) {
+    // Se não há URL do vídeo
+    if (!url || url.trim() === '') {
+        return (
+            <div className="aspect-video bg-zinc-900 rounded-lg flex flex-col items-center justify-center gap-4 border border-zinc-800">
+                <div className="w-20 h-20 rounded-full bg-amber-900/20 flex items-center justify-center">
+                    <Play className="w-8 h-8 text-amber-500" />
+                </div>
+                <div className="text-center px-4">
+                    <p className="text-zinc-300 font-medium">Vídeo não configurado</p>
+                    <p className="text-zinc-500 text-sm mt-1">O vídeo desta aula ainda não foi adicionado.</p>
+                </div>
+            </div>
+        )
+    }
+
+    // Se usar fallback (iframe nativo do YouTube)
+    if (useFallback) {
+        const videoId = extractYouTubeId(url)
+        if (videoId) {
+            return (
+                <div className="relative aspect-video bg-black rounded-lg overflow-hidden shadow-xl">
+                    <iframe
+                        width="100%"
+                        height="100%"
+                        src={`https://www.youtube.com/embed/${videoId}?autoplay=1&modestbranding=1&rel=0&showinfo=0`}
+                        title={title}
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        className="absolute inset-0 w-full h-full"
+                    />
+                </div>
+            )
+        }
+    }
+
+    // Se houve erro e não conseguimos recuperar com fallback
+    if (hasError && !useFallback) {
         return (
             <div className="aspect-video bg-zinc-900 rounded-lg flex flex-col items-center justify-center gap-4 border border-zinc-800">
                 <div className="w-20 h-20 rounded-full bg-red-900/20 flex items-center justify-center">
@@ -152,10 +225,18 @@ export function VideoPlayer({ url, title, onEnded }: VideoPlayerProps) {
                 <div className="text-center px-4">
                     <p className="text-zinc-300 font-medium">Não foi possível carregar o vídeo</p>
                     <button
-                        onClick={() => { setHasError(false); setIsReady(false); }}
+                        onClick={() => {
+                            if (isYouTubeUrl(url)) {
+                                setUseFallback(true);
+                                setHasError(false);
+                            } else {
+                                setHasError(false);
+                                setIsReady(false);
+                            }
+                        }}
                         className="mt-4 text-sm bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90"
                     >
-                        Tentar novamente
+                        {isYouTubeUrl(url) ? 'Tentar Player Alternativo' : 'Tentar novamente'}
                     </button>
                     <p className="text-zinc-600 text-xs mt-4">URL: {url}</p>
                 </div>
@@ -172,7 +253,7 @@ export function VideoPlayer({ url, title, onEnded }: VideoPlayerProps) {
         >
             <ReactPlayer
                 ref={playerRef}
-                url={url}
+                url={url} // ReactPlayer v3 lida bem com url, mas src é preferível. Vamos manter url se for string.
                 width="100%"
                 height="100%"
                 playing={playing}
@@ -187,10 +268,25 @@ export function VideoPlayer({ url, title, onEnded }: VideoPlayerProps) {
                 onPause={() => setPlaying(false)}
                 onError={(e: any) => {
                     console.error("ReactPlayer Error:", e);
-                    setHasError(true);
+                    // Tenta fallback automaticamente se for YouTube
+                    if (isYouTubeUrl(url)) {
+                        setUseFallback(true)
+                    } else {
+                        setHasError(true);
+                    }
                 }}
                 style={{ position: 'absolute', top: 0, left: 0 }}
                 controls={false}
+                config={{
+                    youtube: {
+                        playerVars: {
+                            modestbranding: 1,
+                            rel: 0,
+                            showinfo: 0,
+                            origin: typeof window !== 'undefined' ? window.location.origin : undefined
+                        }
+                    }
+                }}
             />
 
             {/* Loading Overlay */}

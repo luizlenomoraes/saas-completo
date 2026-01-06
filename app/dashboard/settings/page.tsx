@@ -8,8 +8,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Separator } from '@/components/ui/separator'
-import { User, CreditCard, Shield, Loader2, Save, CheckCircle, AlertCircle } from 'lucide-react'
+import { User, CreditCard, Shield, Loader2, Save, CheckCircle, AlertCircle, Activity } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { TrackingSettings } from '@/components/settings/tracking-settings'
 
 export default function SettingsPage() {
     const { data: session } = useSession()
@@ -171,6 +172,10 @@ export default function SettingsPage() {
                     <TabsTrigger value="security" className="gap-2">
                         <Shield className="w-4 h-4" />
                         Segurança
+                    </TabsTrigger>
+                    <TabsTrigger value="tracking" className="gap-2">
+                        <Activity className="w-4 h-4" />
+                        Rastreamento
                     </TabsTrigger>
                 </TabsList>
 
@@ -387,6 +392,11 @@ export default function SettingsPage() {
                             </Button>
                         </CardContent>
                     </Card>
+                </TabsContent>
+
+                {/* Rastreamento */}
+                <TabsContent value="tracking">
+                    <TrackingSettings />
                 </TabsContent>
             </Tabs>
         </div>
