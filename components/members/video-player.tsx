@@ -13,8 +13,13 @@ import {
     DropdownMenuRadioItem,
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
-// Usando import default pois react-player/lazy falhou no build
-import ReactPlayer from 'react-player'
+import dynamic from 'next/dynamic'
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const ReactPlayer: any = dynamic(
+    () => import('react-player').then((mod) => mod.default),
+    { ssr: false }
+)
 
 interface VideoPlayerProps {
     url: string
@@ -186,11 +191,6 @@ export function VideoPlayer({ url, title, onEnded }: VideoPlayerProps) {
                 }}
                 style={{ position: 'absolute', top: 0, left: 0 }}
                 controls={false}
-                config={{
-                    youtube: {
-                        playerVars: { showinfo: 0 }
-                    }
-                }}
             />
 
             {/* Loading Overlay */}

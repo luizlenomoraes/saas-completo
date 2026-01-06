@@ -14,11 +14,21 @@ import {
 } from '@/components/ui/dialog'
 import { Loader2, Package, Clock } from 'lucide-react'
 
+interface Aula {
+    id: string
+    titulo: string
+    url_video: string | null
+    descricao: string | null
+    ordem: number
+    release_days: number
+}
+
 interface Modulo {
     id: string
     titulo: string
     ordem: number
     release_days: number
+    aulas?: Aula[]
 }
 
 interface EditModuleDialogProps {
