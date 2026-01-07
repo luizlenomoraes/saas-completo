@@ -1,112 +1,85 @@
+// app/(auth)/layout.tsx
 import { redirect } from 'next/navigation'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-// Image removido - não utilizado neste componente
+import { Bot, CheckCircle2 } from 'lucide-react'
 
 interface AuthLayoutProps {
     children: React.ReactNode
 }
 
 export default async function AuthLayout({ children }: AuthLayoutProps) {
-    // Verificar se já está logado
     const session = await getServerSession(authOptions)
 
     if (session) {
-        // Redirecionar baseado no tipo
         switch (session.user.type) {
-            case 'ADMIN':
-                redirect('/admin')
-            case 'MEMBER':
-                redirect('/member')
-            default:
-                redirect('/dashboard')
+            case 'ADMIN': redirect('/admin'); break
+            case 'MEMBER': redirect('/member'); break
+            default: redirect('/dashboard')
         }
     }
 
     return (
-        <div className="min-h-screen flex">
-            {/* Lado esquerdo - Imagem de fundo */}
-            <div className="hidden lg:flex lg:w-1/2 relative bg-gradient-to-br from-green-600 via-green-500 to-emerald-400">
-                {/* Overlay com padrão */}
-                <div className="absolute inset-0 bg-black/20" />
+        <div className="min-h-screen flex bg-[#050505] text-white overflow-hidden">
+            {/* Lado esquerdo - Branding de Luxo */}
+            <div className="hidden lg:flex lg:w-1/2 relative bg-[#0a0a0a] border-r border-[#D4AF37]/10">
+                {/* Efeitos de Fundo (Glow) */}
+                <div className="absolute top-0 left-0 w-full h-full overflow-hidden">
+                    <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-[#D4AF37]/5 rounded-full blur-[120px]" />
+                    <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-[#D4AF37]/5 rounded-full blur-[100px]" />
+                </div>
 
-                {/* Conteúdo sobre a imagem */}
-                <div className="relative z-10 flex flex-col justify-center items-center p-12 text-white">
-                    <div className="max-w-md text-center">
-                        {/* Logo ou título */}
-                        <div className="mb-8">
-                            <div className="w-20 h-20 mx-auto bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-6">
-                                <svg
-                                    className="w-12 h-12 text-white"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M13 10V3L4 14h7v7l9-11h-7z"
-                                    />
-                                </svg>
+                {/* Conteúdo */}
+                <div className="relative z-10 w-full flex flex-col justify-center items-center p-16">
+                    <div className="max-w-lg">
+                        <div className="mb-12">
+                            <div className="w-16 h-16 bg-gradient-to-br from-[#D4AF37] to-[#F6D764] rounded-2xl flex items-center justify-center mb-8 shadow-[0_0_30px_-5px_rgba(212,175,55,0.3)]">
+                                <Bot className="w-8 h-8 text-black" strokeWidth={1.5} />
                             </div>
-                            <h1 className="text-4xl font-bold mb-4">Checkout Platform</h1>
-                            <p className="text-xl text-white/80">
-                                A plataforma completa para vender seus produtos digitais
+                            <h1 className="text-5xl font-serif font-medium mb-6 leading-tight">
+                                Domine seu <br />
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] to-[#F6D764]">
+                                    Império Digital
+                                </span>
+                            </h1>
+                            <p className="text-xl text-zinc-400 font-light leading-relaxed">
+                                A plataforma definitiva para quem joga o jogo do high-ticket. Conversão, elegância e performance em um só lugar.
                             </p>
                         </div>
 
-                        {/* Features */}
-                        <div className="space-y-4 text-left">
-                            <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                    </svg>
+                        <div className="space-y-6">
+                            {[
+                                "Checkout de Ultra-Conversão",
+                                "Área de Membros Netflix-Style",
+                                "Dashboard Financeiro em Tempo Real"
+                            ].map((item, i) => (
+                                <div key={i} className="flex items-center gap-4 group">
+                                    <div className="w-8 h-8 rounded-full bg-[#D4AF37]/10 flex items-center justify-center group-hover:bg-[#D4AF37] transition-colors duration-500">
+                                        <CheckCircle2 className="w-4 h-4 text-[#D4AF37] group-hover:text-black transition-colors" />
+                                    </div>
+                                    <span className="text-zinc-300 font-light group-hover:text-white transition-colors">
+                                        {item}
+                                    </span>
                                 </div>
-                                <span>Checkout otimizado para conversão</span>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                    </svg>
-                                </div>
-                                <span>Múltiplos gateways de pagamento</span>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                    </svg>
-                                </div>
-                                <span>Área de membros integrada</span>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                    </svg>
-                                </div>
-                                <span>Dashboard completo com métricas</span>
-                            </div>
+                            ))}
                         </div>
                     </div>
                 </div>
-
-                {/* Decoração de fundo */}
-                <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/20 to-transparent" />
             </div>
 
-            {/* Lado direito - Formulário */}
-            <div className="flex-1 flex flex-col justify-center items-center p-8 bg-gray-50 dark:bg-gray-900">
-                <div className="w-full max-w-md">
+            {/* Lado direito - Formulários */}
+            <div className="flex-1 flex flex-col justify-center items-center p-8 relative">
+                {/* Mobile Glow */}
+                <div className="absolute inset-0 overflow-hidden lg:hidden pointer-events-none">
+                    <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-[#D4AF37]/10 rounded-full blur-[80px]" />
+                </div>
+
+                <div className="w-full max-w-md animate-fade-up relative z-10">
                     {children}
                 </div>
 
-                {/* Footer */}
-                <div className="mt-8 text-center text-sm text-gray-500 dark:text-gray-400">
-                    <p>© {new Date().getFullYear()} Checkout Platform. Todos os direitos reservados.</p>
+                <div className="mt-12 text-center text-xs text-zinc-600">
+                    <p>© {new Date().getFullYear()} AgentiVerso. Excellence in Code.</p>
                 </div>
             </div>
         </div>

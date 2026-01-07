@@ -5,11 +5,20 @@ import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
 import { ImageUpload } from '@/components/ui/image-upload'
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
 
 export interface CheckoutConfig {
     primaryColor: string
     backgroundColor: string
     textColor: string
+    borderRadius: string
+    boxShadow: string
     logoUrl?: string
     timerEnabled: boolean
     timerDuration: number // minutos
@@ -22,6 +31,8 @@ export const defaultCheckoutConfig: CheckoutConfig = {
     primaryColor: '#22c55e', // green-500
     backgroundColor: '#ffffff',
     textColor: '#09090b',
+    borderRadius: 'xl',
+    boxShadow: 'sm',
     timerEnabled: false,
     timerDuration: 15,
     askPhone: true,
@@ -35,7 +46,7 @@ interface CheckoutEditorProps {
 }
 
 export function CheckoutEditor({ value, onChange }: CheckoutEditorProps) {
-    const config = value || defaultCheckoutConfig
+    const config = { ...defaultCheckoutConfig, ...value }
 
     const handleChange = (key: keyof CheckoutConfig, val: any) => {
         onChange({
@@ -93,6 +104,45 @@ export function CheckoutEditor({ value, onChange }: CheckoutEditorProps) {
                                         onChange={(e) => handleChange('backgroundColor', e.target.value)}
                                     />
                                 </div>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 pt-2">
+                            <div className="space-y-2">
+                                <Label>Bordas (Arredondamento)</Label>
+                                <Select
+                                    value={config.borderRadius}
+                                    onValueChange={(val) => handleChange('borderRadius', val)}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="none">Quadrado</SelectItem>
+                                        <SelectItem value="md">Pequeno</SelectItem>
+                                        <SelectItem value="lg">Médio</SelectItem>
+                                        <SelectItem value="xl">Grande</SelectItem>
+                                        <SelectItem value="2xl">Extra Grande</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Sombramento (Cards)</Label>
+                                <Select
+                                    value={config.boxShadow}
+                                    onValueChange={(val) => handleChange('boxShadow', val)}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="none">Sem Sombra</SelectItem>
+                                        <SelectItem value="sm">Suave</SelectItem>
+                                        <SelectItem value="md">Média</SelectItem>
+                                        <SelectItem value="lg">Intensa</SelectItem>
+                                        <SelectItem value="xl">Muito Intensa</SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </div>
                         </div>
                     </CardContent>

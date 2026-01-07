@@ -17,6 +17,32 @@ model aluno_progresso {
   @@unique([aluno_email, aula_id])
 }
 
+model aula_comentarios {
+  id          String   @id @default(uuid())
+  aula_id     String
+  
+  // Identificação (Pode ser Aluno ou Produtor)
+  aluno_email String?  // Preenchido se for aluno
+  aluno_nome  String?  // Cache do nome do aluno
+  usuario_id  String?  // Preenchido se for a equipe/produtor
+  
+  texto       String   @db.Text
+  imagem_url  String?  // URL de print/resultado
+  
+  parent_id   String?  // Para respostas (threads)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  // Relacionamentos
+  aulas       aulas             @relation(fields: [aula_id], references: [id], onDelete: Cascade)
+  usuario     usuarios?         @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+  
+  parent      aula_comentarios?  @relation("ComentarioRespostas", fields: [parent_id], references: [id])
+  respostas   aula_comentarios[] @relation("ComentarioRespostas")
+
+  @@index([aula_id])
+}
+
 model alunos_acessos {
   id          String   @id
   email_aluno String
@@ -53,6 +79,7 @@ model aulas {
   tipo_conteudo   lesson_content_type @default(video)
   aluno_progresso aluno_progresso[]
   aula_arquivos   aula_arquivos[]
+  aula_comentarios aula_comentarios[]
   modulos         modulos             @relation(fields: [modulo_id], references: [id], onDelete: Cascade)
 }
 
@@ -215,6 +242,7 @@ model produtos {
   utmfy_integrations                                                            utmfy_integrations[]
   vendas                                                                        vendas[]
   webhooks                                                                      webhooks[]
+  arquivado                                                                     Boolean                    @default(false)
 }
 
 model pwa_config {
@@ -402,6 +430,7 @@ model usuarios {
   tracking_pixels                  tracking_pixels?
   utmfy_integrations               utmfy_integrations[]
   webhooks                         webhooks[]
+  aula_comentarios                 aula_comentarios[]
 }
 
 model utmfy_integrations {

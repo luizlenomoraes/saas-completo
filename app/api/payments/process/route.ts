@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
         const body: CheckoutPayload = await request.json()
         const { productId, customer, address, paymentMethod, orderBumps, cardData, utm } = body
 
-        // 1. Buscar produto pelo checkout_hash (não pelo ID direto)
+        // 1. Buscar produto e suas configurações de gateway
         const produtos: any[] = await prisma.$queryRaw`
             SELECT 
                 p.id, p.nome, p.preco, p.gateway, p.checkout_hash,
@@ -72,11 +72,12 @@ export async function POST(request: NextRequest) {
 
         const product = produtos[0]
 
-        // 2. Calcular valor total (produto + order bumps)
+        // 2. Calcular valor total (produto + order bumps) BLINDADO
         let totalAmount = Number(product.preco)
         const bumpProducts: { id: string; name: string; price: number }[] = []
 
         if (orderBumps && orderBumps.length > 0) {
+            // Verifica se o bump existe E se pertence ao produto principal (Segurança)
             const bumps: any[] = await prisma.$queryRaw`
                 SELECT 
                     ob.id, 
@@ -84,12 +85,13 @@ export async function POST(request: NextRequest) {
                 FROM order_bumps ob
                 JOIN produtos op ON ob.offer_product_id = op.id
                 WHERE ob.id = ANY(${orderBumps}::text[])
+                AND ob.main_product_id = ${product.id}
             `
 
             for (const bump of bumps) {
                 totalAmount += Number(bump.preco)
                 bumpProducts.push({
-                    id: bump.offer_id,
+                    id: bump.offer_id, // ID do produto ofertado
                     name: bump.nome,
                     price: Number(bump.preco),
                 })

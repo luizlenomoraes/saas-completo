@@ -195,7 +195,8 @@
 }
 
 .dashboard-card:hover {
-  @apply shadow-[0_0_20px_rgba(212, 175, 55, 0.1)] border-primary/40;
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.1);
+  @apply border-primary/40;
   transform: translateY(-2px);
 }
 

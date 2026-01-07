@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Plus, Package, Edit, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
 import { ProductActions } from '@/components/dashboard/product-actions'
+import { ProductImage } from '@/components/dashboard/product-image'
 
 export default async function ProductsPage() {
     const session = await getServerSession(authOptions)
@@ -85,19 +86,7 @@ export default async function ProductsPage() {
                             {/* Imagem do produto - clicável para editar */}
                             <Link href={`/dashboard/products/${produto.id}`} className="block">
                                 <div className="aspect-video bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center relative overflow-hidden">
-                                    {produto.foto ? (
-                                        <img
-                                            src={produto.foto}
-                                            alt={produto.nome}
-                                            className="w-full h-full object-cover"
-                                            onError={(e) => {
-                                                // Se a imagem falhar, esconder e mostrar o ícone
-                                                (e.target as HTMLImageElement).style.display = 'none';
-                                                (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
-                                            }}
-                                        />
-                                    ) : null}
-                                    <Package className={`w-12 h-12 text-primary/30 absolute ${produto.foto ? 'hidden' : ''}`} />
+                                    <ProductImage src={produto.foto} alt={produto.nome} />
                                     {/* Overlay de edição no hover */}
                                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                         <div className="text-white flex items-center gap-2">

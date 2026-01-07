@@ -4,170 +4,132 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-// toast removido - não utilizado neste componente
-import { Loader2, Mail, ArrowLeft, CheckCircle } from 'lucide-react'
+import { Loader2, Mail, ArrowLeft, CheckCircle2 } from 'lucide-react'
 
 import { forgotPasswordSchema, type ForgotPasswordInput } from '@/lib/validations'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 
 export default function ForgotPasswordPage() {
     const [isLoading, setIsLoading] = useState(false)
     const [isSuccess, setIsSuccess] = useState(false)
 
-    const {
-        register,
-        handleSubmit,
-        formState: { errors },
-        getValues,
-    } = useForm<ForgotPasswordInput>({
+    const { register, handleSubmit, formState: { errors }, getValues } = useForm<ForgotPasswordInput>({
         resolver: zodResolver(forgotPasswordSchema),
-        defaultValues: {
-            email: '',
-        },
+        defaultValues: { email: '' },
     })
 
     const onSubmit = async (data: ForgotPasswordInput) => {
         setIsLoading(true)
-
         try {
-            const _response = await fetch('/api/auth/forgot-password', {
+            await fetch('/api/auth/forgot-password', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data),
             })
-
-            // Sempre mostra sucesso por segurança (não revelar se email existe)
             setIsSuccess(true)
-        } catch (_error) {
-            // Mesmo em erro, mostrar sucesso por segurança
-            setIsSuccess(true)
+        } catch (error) {
+            setIsSuccess(true) // Security first
         } finally {
             setIsLoading(false)
         }
     }
 
-    // Tela de sucesso
     if (isSuccess) {
         return (
-            <Card className="border-0 shadow-xl bg-white dark:bg-gray-800">
-                <CardHeader className="space-y-1 text-center">
-                    <div className="w-16 h-16 mx-auto bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mb-4">
-                        <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
-                    </div>
-                    <CardTitle className="text-2xl font-bold">Email enviado!</CardTitle>
-                    <CardDescription className="text-base">
-                        Se existe uma conta com o email <strong>{getValues('email')}</strong>, você receberá um link para redefinir sua senha.
-                    </CardDescription>
-                </CardHeader>
+            <div className="glass-panel p-8 rounded-2xl border border-white/5 relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#D4AF37] to-[#F6D764]" />
 
-                <CardContent className="space-y-4">
-                    <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 text-sm text-amber-800 dark:text-amber-200">
-                        <p className="font-medium mb-1">Não recebeu o email?</p>
-                        <ul className="list-disc list-inside space-y-1 text-amber-700 dark:text-amber-300">
-                            <li>Verifique sua caixa de spam</li>
-                            <li>Confirme se digitou o email correto</li>
-                            <li>Aguarde alguns minutos e tente novamente</li>
+                <div className="text-center space-y-6">
+                    <div className="w-16 h-16 mx-auto bg-[#D4AF37]/10 rounded-full flex items-center justify-center animate-scale-in">
+                        <CheckCircle2 className="h-8 w-8 text-[#D4AF37]" strokeWidth={1.5} />
+                    </div>
+
+                    <div className="space-y-2">
+                        <h2 className="text-2xl font-serif text-white">Email enviado</h2>
+                        <p className="text-zinc-400 font-light">
+                            Se existe uma conta para <strong>{getValues('email')}</strong>, enviamos um link de recuperação.
+                        </p>
+                    </div>
+
+                    <div className="bg-white/5 rounded-lg p-4 text-left border border-white/5">
+                        <p className="text-sm text-[#D4AF37] font-medium mb-2">Não recebeu?</p>
+                        <ul className="text-xs text-zinc-400 space-y-1 list-disc list-inside">
+                            <li>Verifique a caixa de Spam</li>
+                            <li>Confirme se digitou corretamente</li>
                         </ul>
                     </div>
-                </CardContent>
 
-                <CardFooter className="flex flex-col gap-4">
-                    <Button
-                        variant="outline"
-                        className="w-full"
-                        onClick={() => setIsSuccess(false)}
-                    >
-                        Tentar outro email
-                    </Button>
-
-                    <Link href="/login" className="w-full">
-                        <Button className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white">
-                            Voltar para login
+                    <div className="space-y-3 pt-4">
+                        <Button
+                            variant="outline"
+                            onClick={() => setIsSuccess(false)}
+                            className="w-full border-zinc-700 text-zinc-300 hover:bg-white/5 hover:text-white hover:border-zinc-500 h-12"
+                        >
+                            Tentar outro email
                         </Button>
-                    </Link>
-                </CardFooter>
-            </Card>
+                        <Link href="/login" className="block w-full">
+                            <Button className="w-full bg-[#D4AF37] hover:bg-[#B5952F] text-black font-bold h-12">
+                                Voltar para Login
+                            </Button>
+                        </Link>
+                    </div>
+                </div>
+            </div>
         )
     }
 
     return (
-        <Card className="border-0 shadow-xl bg-white dark:bg-gray-800">
-            <CardHeader className="space-y-1 text-center">
-                {/* Logo mobile */}
-                <div className="lg:hidden mb-4">
-                    <div className="w-16 h-16 mx-auto bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg">
-                        <svg
-                            className="w-10 h-10 text-white"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M13 10V3L4 14h7v7l9-11h-7z"
-                            />
-                        </svg>
-                    </div>
+        <div className="glass-panel p-8 rounded-2xl border border-white/5 relative">
+            <div className="space-y-6">
+                <div className="space-y-2 text-center">
+                    <h1 className="text-2xl font-serif text-white">Recuperação de Senha</h1>
+                    <p className="text-zinc-400 text-sm font-light">
+                        Digite seu email para receber o link de acesso
+                    </p>
                 </div>
 
-                <CardTitle className="text-2xl font-bold">Esqueceu sua senha?</CardTitle>
-                <CardDescription>
-                    Digite seu email e enviaremos instruções para redefinir sua senha
-                </CardDescription>
-            </CardHeader>
-
-            <form onSubmit={handleSubmit(onSubmit)}>
-                <CardContent className="space-y-4">
-                    {/* Email */}
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                     <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
-                        <div className="relative">
-                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Label htmlFor="email" className="text-zinc-300">Email profissional</Label>
+                        <div className="relative group">
+                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 group-focus-within:text-[#D4AF37] transition-colors" />
                             <Input
                                 id="email"
                                 type="email"
-                                placeholder="seu@email.com"
-                                className="pl-10"
+                                placeholder="nome@empresa.com"
+                                className="pl-10 bg-black/20 border-white/10 text-white focus:border-[#D4AF37]/50 focus:ring-[#D4AF37]/20 transition-all h-11"
                                 disabled={isLoading}
                                 {...register('email')}
                             />
                         </div>
                         {errors.email && (
-                            <p className="text-sm text-red-500">{errors.email.message}</p>
+                            <p className="text-xs text-red-400">{errors.email.message}</p>
                         )}
                     </div>
-                </CardContent>
 
-                <CardFooter className="flex flex-col gap-4">
                     <Button
                         type="submit"
-                        className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-5"
+                        className="w-full bg-[#D4AF37] hover:bg-[#B5952F] text-black font-bold h-12 shadow-[0_0_20px_-5px_rgba(212,175,55,0.3)] transition-all hover:scale-[1.02]"
                         disabled={isLoading}
                     >
                         {isLoading ? (
-                            <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Enviando...
-                            </>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         ) : (
-                            'Enviar link de recuperação'
+                            'Enviar Link de Recuperação'
                         )}
                     </Button>
 
                     <Link
                         href="/login"
-                        className="flex items-center justify-center gap-2 text-sm text-gray-600 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors"
+                        className="flex items-center justify-center gap-2 text-sm text-zinc-500 hover:text-[#D4AF37] transition-colors"
                     >
                         <ArrowLeft className="h-4 w-4" />
-                        Voltar para login
+                        Voltar para Login
                     </Link>
-                </CardFooter>
-            </form>
-        </Card>
+                </form>
+            </div>
+        </div>
     )
 }

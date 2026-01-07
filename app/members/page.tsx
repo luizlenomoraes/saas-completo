@@ -2,11 +2,11 @@ import { cookies } from 'next/headers'
 import { verifyMemberToken } from '@/lib/auth-member'
 import { prisma } from '@/lib/db'
 import { redirect } from 'next/navigation'
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { PlayCircle, BookOpen, GraduationCap } from 'lucide-react'
+import { Play, BookOpen, Clock, Lock, ShoppingCart } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { PageTransition } from '@/components/ui/page-transition'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,184 +15,214 @@ export default async function MembersDashboard() {
     const token = cookieStore.get('member_session')?.value
     const session: any = token ? await verifyMemberToken(token) : null
 
-    if (!session) {
-        redirect('/members/login')
+    if (!session) redirect('/members/login')
+
+    // 1. Buscar TUDO: Cursos comprados e Cursos disponíveis na vitrine do produtor
+    // Assumindo que o aluno está vinculado a um 'usuario_id' (produtor) através de sua primeira compra
+    // Precisamos descobrir quem é o "dono" da escola desse aluno. 
+    // Vamos pegar o primeiro produto que ele tem acesso para descobrir o produtor.
+
+    const firstAccess = await prisma.alunos_acessos.findFirst({
+        where: { email_aluno: session.email },
+        select: { produtos: { select: { usuario_id: true } } }
+    })
+
+    if (!firstAccess) {
+        // Caso raríssimo: aluno sem nenhum produto (talvez deletado). 
+        return <div className="p-8 text-white">Erro: Nenhuma escola vinculada.</div>
     }
 
-    // Buscando os cursos do aluno
-    const accesses = await prisma.alunos_acessos.findMany({
-        where: { email_aluno: session.email },
+    const producerId = firstAccess.produtos.usuario_id
+
+    // 2. Buscar TODOS os produtos desse produtor que são do tipo 'area_membros'
+    const allProducts = await prisma.produtos.findMany({
+        where: {
+            usuario_id: producerId,
+            tipo_entrega: 'area_membros',
+            arquivado: false
+        },
         include: {
-            produtos: {
+            cursos: {
                 include: {
-                    cursos: {
-                        include: {
-                            modulos: {
-                                include: {
-                                    aulas: { select: { id: true } }
-                                }
-                            }
-                        }
+                    modulos: {
+                        include: { aulas: { select: { id: true } } }
                     }
                 }
             }
         }
     })
 
-    // Filtrar produtos que tenham área de membros
-    const validAccesses = accesses.filter((access: any) => access.produtos.tipo_entrega === 'area_membros')
+    // 3. Buscar quais desses o aluno JÁ TEM
+    const myAccesses = await prisma.alunos_acessos.findMany({
+        where: {
+            email_aluno: session.email,
+            produto_id: { in: allProducts.map(p => p.id) }
+        }
+    })
 
-    // Calcular progresso de cada curso
-    const coursesWithProgress = await Promise.all(
-        validAccesses.map(async (access: any) => {
-            const produto = access.produtos
-            const curso = produto.cursos
+    const myProductIds = myAccesses.map(a => a.produto_id)
 
-            if (!curso) {
-                return { access, totalLessons: 0, completedLessons: 0, progress: 0 }
+    // 4. Processar dados para a view
+    const coursesDisplay = await Promise.all(allProducts.map(async (produto) => {
+        const hasAccess = myProductIds.includes(produto.id)
+        const curso = produto.cursos
+
+        let progress = 0
+        let completedLessons = 0
+        let totalLessons = 0
+
+        if (curso) {
+            totalLessons = curso.modulos.reduce((acc: number, mod: any) => acc + mod.aulas.length, 0)
+
+            if (hasAccess) {
+                const completedResults: any[] = await prisma.$queryRaw`
+                    SELECT COUNT(*) as count FROM aluno_progresso
+                    WHERE aluno_email = ${session.email}
+                    AND aula_id IN (
+                        SELECT a.id FROM aulas a
+                        JOIN modulos m ON a.modulo_id = m.id
+                        WHERE m.curso_id = ${curso.id}
+                    )
+                `
+                completedLessons = parseInt(completedResults[0]?.count || '0')
+                progress = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0
             }
+        }
 
-            // Contar total de aulas
-            const totalLessons = curso.modulos.reduce((acc: number, mod: any) => acc + mod.aulas.length, 0)
+        return {
+            produto,
+            curso,
+            hasAccess,
+            progress,
+            totalLessons,
+            completedLessons
+        }
+    }))
 
-            // Buscar progresso do aluno
-            const completedResults: any[] = await prisma.$queryRaw`
-                SELECT COUNT(*) as count FROM aluno_progresso
-                WHERE aluno_email = ${session.email}
-                AND aula_id IN (
-                    SELECT a.id FROM aulas a
-                    JOIN modulos m ON a.modulo_id = m.id
-                    WHERE m.curso_id = ${curso.id}
-                )
-            `
-            const completedLessons = parseInt(completedResults[0]?.count || '0')
-            const progress = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0
+    // Ordenar: Comprados primeiro, depois Bloqueados
+    coursesDisplay.sort((a, b) => (a.hasAccess === b.hasAccess ? 0 : a.hasAccess ? -1 : 1))
 
-            return { access, totalLessons, completedLessons, progress }
-        })
-    )
+    const firstName = session.nome?.split(' ')[0] || 'Aluno'
 
     return (
-        <div className="space-y-8">
-            {/* Welcome Section */}
-            <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-2xl p-8 border border-primary/10">
-                <div className="flex items-center gap-4 mb-4">
-                    <div className="p-3 rounded-xl bg-primary/10">
-                        <GraduationCap className="w-8 h-8 text-primary" />
-                    </div>
-                    <div>
-                        <h1 className="text-3xl font-bold tracking-tight">Meus Cursos</h1>
-                        <p className="text-muted-foreground mt-1">
-                            Bem-vindo de volta! Continue de onde parou.
-                        </p>
-                    </div>
-                </div>
+        <PageTransition className="space-y-12">
+            {/* Hero Welcome Section */}
+            <div className="relative rounded-3xl overflow-hidden p-8 md:p-12 border border-white/10 group">
+                <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent z-10" />
+                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1550745165-9bc0b252726f')] bg-cover bg-center opacity-40 group-hover:scale-105 transition-transform duration-[2s]" />
 
-                {/* Stats */}
-                <div className="flex gap-6 mt-6">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <BookOpen className="w-4 h-4" />
-                        <span><strong>{coursesWithProgress.length}</strong> curso(s) disponível(is)</span>
-                    </div>
+                <div className="relative z-20 max-w-2xl space-y-6">
+                    <Badge className="bg-[#D4AF37] text-black hover:bg-[#B5952F] border-none px-3 py-1 font-bold">
+                        ÁREA DO ALUNO
+                    </Badge>
+                    <h1 className="text-4xl md:text-5xl font-serif text-white leading-tight">
+                        Bem-vindo, <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] to-[#F6D764]">{firstName}</span>
+                    </h1>
+                    <p className="text-lg text-zinc-300 font-light max-w-lg">
+                        Continue sua jornada. O conhecimento é o único investimento com retorno infinito.
+                    </p>
                 </div>
             </div>
 
             {/* Courses Grid */}
-            {coursesWithProgress.length === 0 ? (
-                <div className="text-center py-16 bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
-                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                        <BookOpen className="w-8 h-8 text-slate-400" />
-                    </div>
-                    <p className="text-slate-600 dark:text-slate-400 font-medium">Você ainda não possui cursos</p>
-                    <p className="text-sm text-slate-500 mt-1">Seus cursos aparecerão aqui após a compra</p>
-                </div>
-            ) : (
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    {coursesWithProgress.map(({ access, totalLessons, completedLessons, progress }: any) => {
-                        const produto = access.produtos
-                        const curso = produto.cursos
+            <div className="space-y-6">
+                <h2 className="text-2xl font-serif text-white">Biblioteca de Cursos</h2>
 
-                        return (
-                            <Card
-                                key={access.id}
-                                className="group flex flex-col overflow-hidden bg-white dark:bg-slate-900 border-slate-200/50 dark:border-slate-800/50 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 hover:-translate-y-1"
-                            >
-                                {/* Image */}
-                                <div className="aspect-video bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700 relative overflow-hidden">
+                <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+                    {coursesDisplay.map(({ produto, hasAccess, totalLessons, completedLessons, progress }) => (
+                        <div key={produto.id} className="group relative block h-full">
+
+                            {/* Card Container */}
+                            <div className={`glass-panel h-full rounded-2xl overflow-hidden border transition-all duration-500 hover:-translate-y-2 
+                                ${hasAccess
+                                    ? 'border-white/5 hover:border-[#D4AF37]/50 hover:shadow-[0_10px_40px_-10px_rgba(212,175,55,0.1)]'
+                                    : 'border-white/5 opacity-80 hover:opacity-100 hover:border-white/20'
+                                }`}>
+
+                                {/* Link Wrapper (Condicional) */}
+                                {hasAccess ? (
+                                    <Link href={`/members/${produto.id}`} className="absolute inset-0 z-30" />
+                                ) : (
+                                    // Se não tem acesso, o link leva para a página de vendas ou checkout
+                                    <Link href={`/checkout/${produto.checkout_hash || ''}`} target="_blank" className="absolute inset-0 z-30" />
+                                )}
+
+                                {/* Thumbnail */}
+                                <div className="aspect-video relative overflow-hidden">
+                                    <div className={`absolute inset-0 z-10 transition-colors ${hasAccess ? 'bg-black/20 group-hover:bg-black/0' : 'bg-black/60 grayscale group-hover:grayscale-0 transition-all duration-500'}`} />
+
                                     {produto.foto ? (
-                                        <img
-                                            src={produto.foto}
-                                            alt={produto.nome}
-                                            className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
-                                        />
+                                        <img src={produto.foto} alt={produto.nome} className="object-cover w-full h-full transform group-hover:scale-110 transition-transform duration-700" />
                                     ) : (
-                                        <div className="w-full h-full flex items-center justify-center">
-                                            <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center">
-                                                <BookOpen className="w-10 h-10 text-primary/50" />
-                                            </div>
+                                        <div className="w-full h-full bg-zinc-900 flex items-center justify-center">
+                                            <BookOpen className="w-12 h-12 text-zinc-700" />
                                         </div>
                                     )}
 
-                                    {/* Progress overlay */}
-                                    {progress > 0 && (
-                                        <div className="absolute bottom-0 left-0 right-0 h-1 bg-slate-200 dark:bg-slate-700">
-                                            <div
-                                                className="h-full bg-gradient-to-r from-primary to-primary/80 transition-all duration-500"
-                                                style={{ width: `${progress}%` }}
-                                            />
+                                    {/* Overlay Icon */}
+                                    <div className="absolute inset-0 flex items-center justify-center z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                        {hasAccess ? (
+                                            <div className="w-16 h-16 rounded-full bg-[#D4AF37]/90 flex items-center justify-center shadow-lg backdrop-blur-sm transform scale-50 group-hover:scale-100 transition-transform">
+                                                <Play className="w-6 h-6 text-black fill-black ml-1" />
+                                            </div>
+                                        ) : (
+                                            <div className="w-16 h-16 rounded-full bg-white/90 flex items-center justify-center shadow-lg backdrop-blur-sm transform scale-50 group-hover:scale-100 transition-transform">
+                                                <Lock className="w-6 h-6 text-black" />
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Progress Bar (Apenas se tiver acesso) */}
+                                    {hasAccess && (
+                                        <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-black/50 z-20">
+                                            <div className="h-full bg-gradient-to-r from-[#D4AF37] to-[#F6D764]" style={{ width: `${progress}%` }} />
                                         </div>
                                     )}
                                 </div>
 
-                                <CardHeader className="pb-3">
-                                    <CardTitle className="line-clamp-2 text-lg group-hover:text-primary transition-colors">
-                                        {produto.nome}
-                                    </CardTitle>
-                                    <div className="flex items-center gap-2 mt-2">
-                                        {curso && (
-                                            <Badge variant="secondary" className="text-xs">
-                                                {curso.modulos?.length || 0} Módulos
+                                {/* Content */}
+                                <div className="p-6">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <div className="flex gap-2">
+                                            <Badge variant="outline" className={`text-[10px] uppercase tracking-wider ${hasAccess ? 'border-[#D4AF37]/30 text-[#D4AF37]' : 'border-zinc-700 text-zinc-500'}`}>
+                                                {hasAccess ? 'Disponível' : 'Bloqueado'}
                                             </Badge>
-                                        )}
-                                        {totalLessons > 0 && (
-                                            <Badge variant="outline" className="text-xs">
-                                                {totalLessons} Aulas
-                                            </Badge>
+                                        </div>
+                                        {!hasAccess && (
+                                            <ShoppingCart className="w-4 h-4 text-zinc-500 group-hover:text-white transition-colors" />
                                         )}
                                     </div>
-                                </CardHeader>
 
-                                <CardContent className="flex-1 pb-4">
-                                    <p className="text-sm text-muted-foreground line-clamp-2">
-                                        {produto.descricao || 'Acesse o conteúdo completo do curso.'}
+                                    <h3 className={`text-xl font-bold mb-2 line-clamp-1 transition-colors ${hasAccess ? 'text-white group-hover:text-[#D4AF37]' : 'text-zinc-400 group-hover:text-white'}`}>
+                                        {produto.nome}
+                                    </h3>
+
+                                    <p className="text-zinc-500 text-sm line-clamp-2 mb-6 font-light">
+                                        {produto.descricao || 'Conteúdo exclusivo para membros.'}
                                     </p>
 
-                                    {/* Progress info */}
-                                    {totalLessons > 0 && (
-                                        <div className="mt-4 flex items-center justify-between text-xs">
-                                            <span className="text-muted-foreground">
-                                                {completedLessons} de {totalLessons} aulas concluídas
-                                            </span>
-                                            <span className={`font-semibold ${progress === 100 ? 'text-green-600' : 'text-primary'}`}>
-                                                {progress}%
-                                            </span>
+                                    {/* Footer Info */}
+                                    {hasAccess ? (
+                                        <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                                            <div className="flex items-center gap-2 text-xs text-zinc-500">
+                                                <Clock className="w-3 h-3" />
+                                                <span>{completedLessons}/{totalLessons} Aulas</span>
+                                            </div>
+                                            <span className="text-sm font-bold text-white">{progress}%</span>
+                                        </div>
+                                    ) : (
+                                        <div className="pt-4 border-t border-white/5">
+                                            <Button className="w-full bg-white/5 hover:bg-white/20 text-white border border-white/10">
+                                                Desbloquear Acesso
+                                            </Button>
                                         </div>
                                     )}
-                                </CardContent>
-
-                                <CardFooter className="pt-0">
-                                    <Button className="w-full gap-2 group-hover:shadow-lg group-hover:shadow-primary/20 transition-shadow" asChild>
-                                        <Link href={`/members/${produto.id}`}>
-                                            <PlayCircle className="w-4 h-4" />
-                                            {progress > 0 ? 'Continuar' : 'Começar'}
-                                        </Link>
-                                    </Button>
-                                </CardFooter>
-                            </Card>
-                        )
-                    })}
+                                </div>
+                            </div>
+                        </div>
+                    ))}
                 </div>
-            )}
-        </div>
+            </div>
+        </PageTransition>
     )
 }
